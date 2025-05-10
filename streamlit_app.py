@@ -28,198 +28,121 @@ st.title("Jockey Race 賽馬程式")
 
 # @title 2. {func} 下載數據
 # @title 處理數據
-def get_investment_data():
-  url = 'https://info.cld.hkjc.com/graphql/base/'
-  headers = {'Content-Type': 'application/json'}
+async def scrape_qin_table(page):
+    data_qin = {}
+    qin_table = await page.query_selector('table.qin-odds-table-QIN')
+    if qin_table:
+        rows = await qin_table.query_selector_all('tr')
+        for row in rows:
+            for cell in await row.query_selector_all('td'):
+                cell_id = await cell.get_attribute('id')
+                if cell_id:
+                    data_qin[cell_id] = await cell.inner_text()
+    return data_qin
 
-  payload_investment = {
-      "operationName": "racing",
-      "variables": {
-          "date": str(Date),
-          "venueCode": place,
-          "raceNo": int(race_no),
-          "oddsTypes": methodlist
-      },
-      "query": """
-      query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
-        raceMeetings(date: $date, venueCode: $venueCode) {
-          totalInvestment
-          poolInvs: pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
-            id
-            leg {
-              number
-              races
-            }
-            status
-            sellStatus
-            oddsType
-            investment
-            mergedPoolId
-            lastUpdateTime
-          }
-        }
-      }
-      """
-  }
+async def scrape_qpl_table(page):
+    data_qpl = {}
+    qpl_table = await page.query_selector('table.qin-odds-table-QPL')
+    if qpl_table:
+        rows = await qpl_table.query_selector_all('tr')
+        for row in rows:
+            for cell in await row.query_selector_all('td'):
+                cell_id = await cell.get_attribute('id')
+                if cell_id:
+                    data_qpl[cell_id] = await cell.inner_text()
+    return data_qpl
 
-  response = requests.post(url, headers=headers, json=payload_investment)
+async def scrape_win_pla_table(page):
+    data_win_pla = {}
+    win_pla_table = await page.query_selector('table.rc-odds-table-compact.pr.isTop.show')
+    if win_pla_table:
+        rows = await win_pla_table.query_selector_all('tr')
+        for row in rows:
+            for cell in await row.query_selector_all('td'):
+                divs = await cell.query_selector_all('div[id]')
+                for div in divs:
+                    div_id = await div.get_attribute('id')
+                    if div_id:
+                        data_win_pla[div_id] = await div.inner_text()
+    return data_win_pla
 
-  if response.status_code == 200:
-      investment_data = response.json()
+async def scrape_investments(page):
+    investments = {"WIN": [], "PLA": [], "QIN": [], "QPL": []}
+    table = await page.query_selector('table.rc-inv-table.rc-inv-table-left')
+    rows = await table.query_selector_all('tr')
 
-      # Extracting the investment into different types of oddsType
-      investments = {
-          "WIN": [],
-          "PLA": [],
-          "QIN": [],
-          "QPL": []
-      }
+    for row in rows[:4]:  # Only first 4 rows are relevant
+        cells = await row.query_selector_all('td')
+        if len(cells) < 2:
+            continue
 
-      race_meetings = investment_data.get('data', {}).get('raceMeetings', [])
-      if race_meetings:
-          for meeting in race_meetings:
-              pool_invs = meeting.get('poolInvs', [])
-              for pool in pool_invs:
-                  if place not in ['ST','HV']:
-                    id = pool.get('id')
-                    if id[8:10] != place:
-                      continue                
-                  investment = float(pool.get('investment'))
-                  investments[pool.get('oddsType')].append(investment)
+        odds_type = await cells[0].inner_text()
+        investment_str = (await cells[1].inner_text()).replace('$', '').replace(',', '').strip()
 
-          #print("Investments:", investments)
-      else:
-          print("No race meetings found in the response.")
+        try:
+            investment = float(investment_str)
+        except ValueError:
+            continue
 
-      return investments
-  else:
-      print(f"Error: {response.status_code}")
+        if odds_type == '獨贏':
+            investments["WIN"].append(investment)
+        elif odds_type == '位置':
+            investments["PLA"].append(investment)
+        elif odds_type == '連贏':
+            investments["QIN"].append(investment)
+        elif odds_type == '位置Q':
+            investments["QPL"].append(investment)
 
-def get_odds_data():
-  url = 'https://info.cld.hkjc.com/graphql/base/'
-  headers = {'Content-Type': 'application/json'}
-  payload_odds = {
-      "operationName": "racing",
-      "variables": {
-          "date": str(Date),
-          "venueCode": place,
-          "raceNo": int(race_no),
-          "oddsTypes": methodlist
-      },
-      "query": """
-      query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
-        raceMeetings(date: $date, venueCode: $venueCode) {
-          pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
-            id
-            status
-            sellStatus
-            oddsType
-            lastUpdateTime
-            guarantee
-            minTicketCost
-            name_en
-            name_ch
-            leg {
-              number
-              races
-            }
-            cWinSelections {
-              composite
-              name_ch
-              name_en
-              starters
-            }
-            oddsNodes {
-              combString
-              oddsValue
-              hotFavourite
-              oddsDropValue
-              bankerOdds {
-                combString
-                oddsValue
-              }
-            }
-          }
-        }
-      }
-      """
-  }
+    return investments
 
-  response = requests.post(url, headers=headers, json=payload_odds)
-  if response.status_code == 200:
-      odds_data = response.json()
-          # Extracting the oddsValue into different types of oddsType and sorting by combString for QIN and QPL
-      odds_values = {
-          "WIN": [],
-          "PLA": [],
-          "QIN": [],
-          "QPL": []
-      }
+# --- Data Processing ---
 
-      race_meetings = odds_data.get('data', {}).get('raceMeetings', [])
-      for meeting in race_meetings:
-          pm_pools = meeting.get('pmPools', [])
-          for pool in pm_pools:
-              if place not in ['ST','HV']:
-                id = pool.get('id')
-                if id[8:10] != place:
-                  continue            
-              odds_nodes = pool.get('oddsNodes', [])
-              odds_type = pool.get('oddsType')
-              for node in odds_nodes:
-                  oddsValue = node.get('oddsValue')
-                  if oddsValue == 'SCR':
-                    oddsValue = np.inf
-                  else:
-                    oddsValue = float(oddsValue)
+def sort_data(data_with_ids):
+    sorted_keys = sorted(data_with_ids.keys(), key=lambda x: list(map(int, re.findall(r'\d+', x))))
+    return {f"{key.split('_')[2]}-{key.split('_')[3]}": data_with_ids[key] for key in sorted_keys}
 
-                  if odds_type in ["QIN", "QPL"]:
-                      odds_values[odds_type].append((node.get('combString'), oddsValue))
-                  else:
-                      odds_values[odds_type].append(oddsValue)
+def save_odds_data_from_scrape(qin, qpl, win_pla):
+    odds_values = {"WIN": [], "PLA": [], "QIN": [], "QPL": []}
+    for key, value in qin.items():
+        odds_values["QIN"].append((key, float(value) if value != 'SCR' else np.inf))
+    for key, value in qpl.items():
+        odds_values["QPL"].append((key, float(value) if value != 'SCR' else np.inf))
+    for key, value in win_pla.items():
+        if key.startswith('odds_WIN'):
+            odds_values["WIN"].append(float(value) if value != 'SCR' else np.inf)
+        elif key.startswith('odds_PLA'):
+            odds_values["PLA"].append(float(value) if value != 'SCR' else np.inf)
+    odds_values["QIN"].sort(key=lambda x: list(map(int, re.findall(r'\d+', x[0]))))
+    odds_values["QPL"].sort(key=lambda x: list(map(int, re.findall(r'\d+', x[0]))))
+    return odds_values
 
-      # Sorting the QIN and QPL odds values by combString in ascending order
-      odds_values["QIN"].sort(key=lambda x: x[0])
-      odds_values["QPL"].sort(key=lambda x: x[0])
+# --- Save Data ---
 
-      #print("WIN Odds Values:", odds_values["WIN"])
-      #print("PLA Odds Values:", odds_values["PLA"])
-      #print("QIN Odds Values (sorted by combString):", [value for _, value in odds_values["QIN"]])
-      #print("QPL Odds Values (sorted by combString):", [value for _, value in odds_values["QPL"]])
+def save_odds_data(time_now, odds):
+    for method in methodlist:
+        if method in ['WIN', 'PLA']:
+            if odds_dict[method].empty:
+                odds_dict[method] = pd.DataFrame(columns=np.arange(1, len(odds[method]) + 1))
+            odds_dict[method].loc[time_now] = odds[method]
+        elif method in ['QIN', 'QPL']:
+            combination, odds_array = zip(*odds[method])
+            if odds_dict[method].empty:
+                odds_dict[method] = pd.DataFrame(columns=combination)
+            odds_dict[method].loc[time_now] = odds_array
 
-      return odds_values
-  else:
-      print(f"Error: {response.status_code}")
-
-def save_odds_data(time_now,odds):
-  for method in methodlist:
-      if method in ['WIN', 'PLA']:
-        if odds_dict[method].empty:
-            # Initialize the DataFrame with the correct number of columns
-            odds_dict[method] = pd.DataFrame(columns=np.arange(1, len(odds[method]) + 1))
-        odds_dict[method].loc[time_now] = odds[method]
-      elif method in ['QIN','QPL']:
-        combination, odds_array = zip(*odds[method])
-        if odds_dict[method].empty:
-          odds_dict[method] = pd.DataFrame(columns=combination)
-        # Set the values with the specified index
-        odds_dict[method].loc[time_now] = odds_array
-
-def save_investment_data(time_now,investment,odds):
-  for method in methodlist:
-      if method in ['WIN', 'PLA']:
-        if investment_dict[method].empty:
-            # Initialize the DataFrame with the correct number of columns
-            investment_dict[method] = pd.DataFrame(columns=np.arange(1, len(odds[method]) + 1))
-        investment_df = [round(investments[method][0] * 0.825 / 1000 / odd, 2) for odd in odds[method]]
-        investment_dict[method].loc[time_now] = investment_df
-      elif method in ['QIN','QPL']:
-        combination, odds_array = zip(*odds[method])
-        if investment_dict[method].empty:
-          investment_dict[method] = pd.DataFrame(columns=combination)
-        investment_df = [round(investments[method][0] * 0.825 / 1000 / odd, 2) for odd in odds_array]
-        # Set the values with the specified index
-        investment_dict[method].loc[time_now] = investment_df
+def save_investment_data(time_now, investments, odds):
+    for method in methodlist:
+        if method in ['WIN', 'PLA']:
+            if investment_dict[method].empty:
+                investment_dict[method] = pd.DataFrame(columns=np.arange(1, len(odds[method]) + 1))
+            investment_df = [round(investments[method][0] * 0.825 / 1000 / odd, 2) for odd in odds[method]]
+            investment_dict[method].loc[time_now] = investment_df
+        elif method in ['QIN', 'QPL']:
+            combination, odds_array = zip(*odds[method])
+            if investment_dict[method].empty:
+                investment_dict[method] = pd.DataFrame(columns=combination)
+            investment_df = [round(investments[method][0] * 0.825 / 1000 / odd, 2) for odd in odds_array]
+            investment_dict[method].loc[time_now] = investment_df
 
 def print_data(time_now,period):
   for watch in watchlist:
@@ -606,6 +529,48 @@ def main(time_now,odds,investments,period):
   print_bar_chart(time_now)
   print_top()
 
+# --- Collect and Run ---
+async def collect_data():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+
+        # Block images and fonts for faster load
+        await page.route("**/*", lambda route: route.abort()
+                         if route.request.resource_type in ["image", "stylesheet", "font"]
+                         else route.continue_())
+
+        # --- Step 1: Load odds page ---
+        odds_url = f'https://bet.hkjc.com/ch/racing/wpq/{Date}/{place}/{race_no}'
+        await page.goto(odds_url)
+        await page.wait_for_selector('table', timeout=5000)
+
+        # Concurrent scraping of odds tables
+        qin_task = scrape_qin_table(page)
+        qpl_task = scrape_qpl_table(page)
+        winpla_task = scrape_win_pla_table(page)
+
+        data_qin, data_qpl, data_win_pla = await asyncio.gather(qin_task, qpl_task, winpla_task)
+
+        # --- Step 2: Load investment page ---
+        inv_url = f'https://bet.hkjc.com/ch/racing/wp/{Date}/{place}/{race_no}'
+        await page.goto(inv_url)
+        await page.wait_for_selector('table.rc-inv-table.rc-inv-table-left', timeout=5000)
+        investments = await scrape_investments(page)
+
+        await browser.close()
+
+        # Process and return
+        sorted_qin = sort_data(data_qin)
+        sorted_qpl = sort_data(data_qpl)
+        odds = save_odds_data_from_scrape(sorted_qin, sorted_qpl, data_win_pla)
+
+        return odds, investments
+
+async def run_main(period):
+    odds, investments = await collect_data()
+    main(time_now, odds, investments, period)
+  
 # Display the date picker widget
 infoColumns = st.columns(3)
 with infoColumns[0]:
@@ -939,10 +904,6 @@ placeholder = st.empty()
 with st.empty():
         while time.time() <= end_time:
             with st.container():
-                time_now = datetime.now() + datere.relativedelta(hours=8)
-                odds = get_odds_data()
-                investments = get_investment_data()
-                period = 2
-                main(time_now,odds,investments,period)
-                time.sleep(20)
-
+              time_now = datetime.now() + datere.relativedelta(hours=8)
+              period = 2
+              await run_main(period)
