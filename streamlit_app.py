@@ -17,7 +17,6 @@ from IPython.display import display, Javascript, HTML, clear_output
 # --- Plotting & Fonts ---
 import matplotlib
 from matplotlib import pyplot as plt
-!wget -O TaipeiSansTCBeta-Regular.ttf "https://drive.google.com/uc?id=1eGAsTN1HBpJAkeVM57_C7ccp7hbgSz3_&export=download"
 matplotlib.font_manager.fontManager.addfont('TaipeiSansTCBeta-Regular.ttf')
 matplotlib.rc('font', family='Taipei Sans TC Beta')
 pd.set_option('display.width', 180)
