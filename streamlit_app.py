@@ -912,12 +912,12 @@ if st.session_state.reset:
     st.write(f"DataFrame for Race No: {race_no}")
     race_dataframes[race_no]
     
-start_time = time.time()
-end_time = start_time + 60*1000
-placeholder = st.empty()
-with st.empty():
-        while time.time() <= end_time:
-            with st.container():
-              time_now = datetime.now() + datere.relativedelta(hours=8)
-              period = 2
-              await run_main(period)
+if st.button("Start Data Collection"):
+    start_time = time.time()
+    end_time = start_time + 60 * 1000  # Run for 1000 minutes
+    placeholder = st.empty()
+
+    while time.time() <= end_time:
+        time_now = datetime.now() + datere.relativedelta(hours=8)
+        period = 2
+        asyncio.run(run_main(period))  # 👈 Run your async function here
