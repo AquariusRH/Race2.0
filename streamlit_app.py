@@ -889,8 +889,6 @@ if not st.session_state.api_called:
       numbered_dict[race_number] = numbered_list
       race_dataframes[race_number] = df
     
-st.button('開始',on_click=click_start_button)
-
 if st.session_state.reset:
     odds_dict = {}
     for method in methodlist:
@@ -912,12 +910,22 @@ if st.session_state.reset:
     st.write(f"DataFrame for Race No: {race_no}")
     race_dataframes[race_no]
     
-if st.button("Start Data Collection"):
+# Sync wrapper to call your async code
+def run_main_sync(period):
+    asyncio.run(run_main(period))
+
+def click_start_button():
     start_time = time.time()
-    end_time = start_time + 60 * 1000  # Run for 1000 minutes
+    end_time = start_time + 60 * 20  # e.g. 20 minutes
     placeholder = st.empty()
 
     while time.time() <= end_time:
-        time_now = datetime.now() + datere.relativedelta(hours=8)
-        period = 2
-        asyncio.run(run_main(period))  # 👈 Run your async function here
+        with placeholder.container():
+            time_now = datetime.now() + datere.relativedelta(hours=8)
+            period = 2
+            run_main_sync(period)
+            st.write(f"Last run: {time_now.strftime('%H:%M:%S')}")
+        time.sleep(10)  # Sleep between runs to avoid overloading
+
+# The button that starts the loop
+st.button('開始', on_click=click_start_button)
