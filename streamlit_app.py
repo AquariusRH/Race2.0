@@ -1,27 +1,44 @@
-import altair as alt
-import pandas as pd
-import streamlit as st
+# @title 1. 安裝與導入套件 (一次即可)
+# --- System + Data ---
+import time
+import math
+import re
+import warnings
+import asyncio
+import nest_asyncio
 import requests
 import pandas as pd
 import numpy as np
-from datetime import datetime , timedelta, timezone
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta, timezone
 from dateutil import relativedelta as datere
-import matplotlib.pyplot as plt
+from IPython.display import display, Javascript, HTML, clear_output
+
+# --- Plotting & Fonts ---
 import matplotlib
+from matplotlib import pyplot as plt
+!wget -O TaipeiSansTCBeta-Regular.ttf "https://drive.google.com/uc?id=1eGAsTN1HBpJAkeVM57_C7ccp7hbgSz3_&export=download"
 matplotlib.font_manager.fontManager.addfont('TaipeiSansTCBeta-Regular.ttf')
 matplotlib.rc('font', family='Taipei Sans TC Beta')
-import time
+pd.set_option('display.width', 180)
+
+# --- Warnings ---
 from warnings import simplefilter
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
-import math
-from streamlit_autorefresh import st_autorefresh
-from ipywidgets import interact
+simplefilter(action='ignore', category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning, message="no explicit representation of timezones available for np.datetime64")
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+# --- Widgets ---
 import ipywidgets as widgets
-import asyncio
-import aiohttp
-import nest_asyncio
-from bs4 import BeautifulSoup
-import re
+from ipywidgets import interact
+
+# --- Playwright ---
+!pip install playwright
+!python -m playwright install --with-deps
+from playwright.async_api import async_playwright
+
+
 # Show the page title and description.
 st.set_page_config(page_title="Jockey Race")
 st.title("Jockey Race 賽馬程式")
