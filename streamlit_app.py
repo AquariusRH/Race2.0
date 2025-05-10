@@ -33,7 +33,6 @@ import ipywidgets as widgets
 from ipywidgets import interact
 
 # --- Playwright ---
-!python -m playwright install --with-deps
 from playwright.async_api import async_playwright
 
 
