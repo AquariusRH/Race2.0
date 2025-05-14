@@ -1,24 +1,38 @@
 import requests
 from bs4 import BeautifulSoup
 
-url = "https://racing.hkjc.com/racing/information/Chinese/Racing/LocalResults.aspx"
+# 設定賽事資訊
+race_date = "2025/05/14"
+racecourse = "HV"
+race_no = "1"
+
+# 構建 URL 和參數
+url = "https://racing.hkjc.com/racing/information/Chinese/Racing/LocalOdds.aspx"
 params = {
-    "RaceDate": "2024/05/12",
-    "Racecourse": "ST",
-    "RaceNo": "10"
+    "RaceDate": race_date,
+    "Racecourse": racecourse,
+    "RaceNo": race_no
 }
 
+# 設定 headers
 headers = {
-    "User-Agent": "Mozilla/5.0",
+    "User-Agent": "Mozilla/5.0"
 }
 
-res = requests.get(url, params=params, headers=headers)
-soup = BeautifulSoup(res.text, "html.parser")
+# 發送 GET 請求
+response = requests.get(url, params=params, headers=headers)
+response.encoding = "utf-8"  # 設定正確的編碼
 
-# 找到賽馬成績表格
+# 解析 HTML
+soup = BeautifulSoup(response.text, "html.parser")
+
+# 找到賠率表格
 table = soup.find("table", class_="table_bd")
-rows = table.find_all("tr")
-
-for row in rows:
-    cols = [col.text.strip() for col in row.find_all("td")]
-    print(cols)
+if table:
+    rows = table.find_all("tr")
+    for row in rows:
+        cols = [col.text.strip() for col in row.find_all("td")]
+        if cols:
+            print(cols)
+else:
+    print("未找到賠率資料")
