@@ -1,6 +1,9 @@
 import subprocess
 import os
 import streamlit as st
+# Show the page title and description.
+st.set_page_config(page_title="Jockey Race")
+st.title("Jockey Race 賽馬程式")
 
 # Automatically run `playwright install` if browsers are missing
 def install_playwright_browsers():
@@ -52,9 +55,6 @@ from ipywidgets import interact
 from playwright.async_api import async_playwright
 import streamlit as st
 
-# Show the page title and description.
-st.set_page_config(page_title="Jockey Race")
-st.title("Jockey Race 賽馬程式")
 
 # @title 2. {func} 下載數據
 # @title 處理數據
