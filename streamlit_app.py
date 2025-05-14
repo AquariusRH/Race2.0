@@ -1,3 +1,11 @@
+import subprocess
+import os
+
+# Only install browsers if not already installed
+playwright_cache = os.path.expanduser("~/.cache/ms-playwright")
+
+if not os.path.exists(playwright_cache):
+    subprocess.run(["playwright", "install", "--with-deps"])
 # @title 1. 安裝與導入套件 (一次即可)
 # --- System + Data ---
 import time
