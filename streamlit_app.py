@@ -1,11 +1,19 @@
 import subprocess
 import os
+import streamlit as st
 
-# Only install browsers if not already installed
-playwright_cache = os.path.expanduser("~/.cache/ms-playwright")
+# Automatically run `playwright install` if browsers are missing
+def install_playwright_browsers():
+    chromium_path = os.path.expanduser("~/.cache/ms-playwright/chromium")
+    if not os.path.exists(chromium_path):
+        with st.spinner("Installing Playwright browsers (first-time setup)..."):
+            try:
+                subprocess.run(["playwright", "install", "--with-deps"], check=True)
+                st.success("✅ Playwright browsers installed.")
+            except subprocess.CalledProcessError:
+                st.error("❌ Failed to install Playwright browsers. Try restarting the app.")
 
-if not os.path.exists(playwright_cache):
-    subprocess.run(["playwright", "install", "--with-deps"])
+install_playwright_browsers()
 # @title 1. 安裝與導入套件 (一次即可)
 # --- System + Data ---
 import time
