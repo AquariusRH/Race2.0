@@ -1,9 +1,10 @@
-streamlit
+pandas
+numpy
 matplotlib
-streamlit-autorefresh
-ipywidgets
-asyncio
-aiohttp
-nest_asyncio
 bs4
+requests
+python-dateutil
+nest_asyncio
 playwright
+ipython
+ipywidgets
