@@ -12,9 +12,7 @@ def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_n
 
     if method == "overall":
         df = overall_investment_dict[method]
-    elif method == "qin_qpl":
-        df = overall_investment_dict["QIN"] + overall_investment_dict["QPL"]
-    elif method in ["WIN", "PLA", "qin"]:
+    elif method in METHOD_LIST_WITH_QPL:
         df = overall_investment_dict[method]
 
     df.index = pd.to_datetime(df.index)
