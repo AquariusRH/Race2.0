@@ -23,16 +23,8 @@ async def fetch_data(url, payload, headers):
 
 @st.cache_data(ttl=60)
 def get_investment_data_sync(_date, _place, _race_no, _methodlist):
-    # Synchronous wrapper to run async function
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        # If running in Streamlit, use run_coroutine_threadsafe
-        future = asyncio.run_coroutine_threadsafe(
-            get_investment_data(_date, _place, _race_no, _methodlist), loop
-        )
-        return future.result()
-    else:
-        return asyncio.run(get_investment_data(_date, _place, _race_no, _methodlist))
+    # Synchronous wrapper for async function
+    return asyncio.run(get_investment_data(_date, _place, _race_no, _methodlist))
 
 async def get_investment_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
     payload = {
@@ -75,14 +67,7 @@ async def get_investment_data(date, place, race_no, methodlist=METHOD_LIST_WITH_
 
 @st.cache_data(ttl=60)
 def get_odds_data_sync(_date, _place, _race_no, _methodlist):
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        future = asyncio.run_coroutine_threadsafe(
-            get_odds_data(_date, _place, _race_no, _methodlist), loop
-        )
-        return future.result()
-    else:
-        return asyncio.run(get_odds_data(_date, _place, _race_no, _methodlist))
+    return asyncio.run(get_odds_data(_date, _place, _race_no, _methodlist))
 
 async def get_odds_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
     payload = {
@@ -136,12 +121,7 @@ async def get_odds_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
 
 @st.cache_data(ttl=60)
 def get_race_info_sync(_date, _place):
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        future = asyncio.run_coroutine_threadsafe(get_race_info(_date, _place), loop)
-        return future.result()
-    else:
-        return asyncio.run(get_race_info(_date, _place))
+    return asyncio.run(get_race_info(_date, _place))
 
 async def get_race_info(date, place):
     payload = {
