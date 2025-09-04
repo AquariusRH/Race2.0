@@ -14,6 +14,8 @@ def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_n
         df = overall_investment_dict[method]
     elif method in METHOD_LIST_WITH_QPL:
         df = overall_investment_dict[method]
+    else:
+        continue
 
     df.index = pd.to_datetime(df.index)
     df_25 = df[df.index < time_25_minutes_before].tail(1)
