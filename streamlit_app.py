@@ -8,9 +8,8 @@ except ImportError:
 
 from datetime import datetime, timedelta
 import pandas as pd
-import asyncio
 from dateutil import relativedelta as datere
-from data_fetch import get_investment_data, get_odds_data, get_race_info
+from data_fetch import get_investment_data_sync, get_odds_data_sync, get_race_info_sync
 from data_process import save_odds_data, save_investment_data, get_overall_investment
 from visualization import print_bar_chart
 from config import (
@@ -59,7 +58,7 @@ print_list = PRINT_LIST_WITHOUT_QPL if no_qpl else PRINT_LIST_WITH_QPL
 if st.button("開始"):
     st.session_state.reset = True
     try:
-        race_dict, post_time_dict = asyncio.run(get_race_info(Date, place))
+        race_dict, post_time_dict = get_race_info_sync(Date, place)
         st.session_state.post_time_dict = post_time_dict
         st.session_state.race_dataframes = {}
         st.session_state.numbered_dict = {}
@@ -96,8 +95,8 @@ if st.session_state.get("reset", False):
         st.subheader("賠率與投注數據")
         time_now = datetime.now() + datere.relativedelta(hours=8)
         try:
-            odds = asyncio.run(get_odds_data(Date, place, race_no, methodlist))
-            investments = asyncio.run(get_investment_data(Date, place, race_no, methodlist))
+            odds = get_odds_data_sync(Date, place, race_no, methodlist)
+            investments = get_investment_data_sync(Date, place, race_no, methodlist)
             if odds and investments:
                 save_odds_data(time_now, odds, st.session_state.odds_dict)
                 save_investment_data(time_now, investments, odds, st.session_state.investment_dict)
