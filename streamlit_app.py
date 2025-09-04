@@ -42,13 +42,11 @@ if "selected_race_no" not in st.session_state:
 
 # 用戶輸入介面
 with st.container():
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)  # Adjusted to 2 columns since checkbox is removed
     with col1:
         Date = st.date_input("日期:", value=datetime.now())
     with col2:
         place = st.selectbox("場地:", VENUE_OPTIONS)
-    with col3:
-        no_qpl = st.checkbox("沒有位置Q", value=False)
 
 # 場次按鈕 (1-11) 排列為單行
 with st.container():
@@ -58,10 +56,10 @@ with st.container():
     for i, race_num in enumerate(race_numbers):
         cols[i].button(str(race_num), key=f"race_{race_num}", on_click=lambda x=race_num: st.session_state.update(selected_race_no=x))
 
-# 根據 checkbox 設置 methodlist 和 print_list
-methodlist = METHOD_LIST_WITHOUT_QPL if no_qpl else METHOD_LIST_WITH_QPL
-methodCHlist = METHOD_CH_WITHOUT_QPL if no_qpl else METHOD_CH_WITH_QPL
-print_list = PRINT_LIST_WITHOUT_QPL if no_qpl else PRINT_LIST_WITH_QPL
+# Set methodlist and print_list to default (with QPL)
+methodlist = METHOD_LIST_WITH_QPL
+methodCHlist = METHOD_CH_WITH_QPL
+print_list = PRINT_LIST_WITH_QPL
 
 # 獲取並優先顯示賽事資訊 (觸發於開始按鈕)
 if st.button("開始"):
@@ -117,7 +115,7 @@ if st.session_state.get("reset", False) and race_no:
                 save_investment_data(time_now, investments, odds, st.session_state.investment_dict)
                 get_overall_investment(time_now, st.session_state.investment_dict, st.session_state.overall_investment_dict, methodlist)
                 for method in print_list:
-                    st.write(f"{methodCHlist[methodlist.index(method)] if method in methodlist else method} 圖表")
+                    st.write(f"{methodCHlist[methodlist.index(method)]} 圖表")
                     print_bar_chart(
                         time_now, st.session_state.overall_investment_dict, st.session_state.odds_dict,
                         method, race_no, st.session_state.numbered_dict, st.session_state.post_time_dict
