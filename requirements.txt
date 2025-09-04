@@ -11,3 +11,4 @@ ipywidgets
 streamlit
 aiohttp
 altair
+streamlit-autorefresh
