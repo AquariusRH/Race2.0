@@ -8,3 +8,6 @@ nest_asyncio
 playwright
 ipython
 ipywidgets
+streamlit
+aiohttp
+altair
