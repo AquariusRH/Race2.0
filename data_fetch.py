@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 from config import API_URL, HEADERS, METHOD_LIST_WITH_QPL
 
-@st.cache_data(ttl=60)
 async def fetch_data(url, payload, headers):
     async with aiohttp.ClientSession() as session:
         for attempt in range(3):
@@ -21,6 +20,19 @@ async def fetch_data(url, payload, headers):
                 if attempt < 2:
                     await asyncio.sleep(2)
     return None
+
+@st.cache_data(ttl=60)
+def get_investment_data_sync(_date, _place, _race_no, _methodlist):
+    # Synchronous wrapper to run async function
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        # If running in Streamlit, use run_coroutine_threadsafe
+        future = asyncio.run_coroutine_threadsafe(
+            get_investment_data(_date, _place, _race_no, _methodlist), loop
+        )
+        return future.result()
+    else:
+        return asyncio.run(get_investment_data(_date, _place, _race_no, _methodlist))
 
 async def get_investment_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
     payload = {
@@ -60,6 +72,17 @@ async def get_investment_data(date, place, race_no, methodlist=METHOD_LIST_WITH_
                 investment = float(pool.get("investment"))
                 investments[pool.get("oddsType")].append(investment)
     return investments
+
+@st.cache_data(ttl=60)
+def get_odds_data_sync(_date, _place, _race_no, _methodlist):
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(
+            get_odds_data(_date, _place, _race_no, _methodlist), loop
+        )
+        return future.result()
+    else:
+        return asyncio.run(get_odds_data(_date, _place, _race_no, _methodlist))
 
 async def get_odds_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
     payload = {
@@ -110,6 +133,15 @@ async def get_odds_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
         for odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
             odds_values[odds_type].sort(key=lambda x: x[0] if x else None)
     return odds_values
+
+@st.cache_data(ttl=60)
+def get_race_info_sync(_date, _place):
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(get_race_info(_date, _place), loop)
+        return future.result()
+    else:
+        return asyncio.run(get_race_info(_date, _place))
 
 async def get_race_info(date, place):
     payload = {
