@@ -50,19 +50,13 @@ with st.container():
     with col3:
         no_qpl = st.checkbox("沒有位置Q", value=False)
 
-# 場次按鈕 (1-11) 排列為 3x4 網格
+# 場次按鈕 (1-11) 排列為單行
 with st.container():
     st.subheader("選擇場次")
-    cols = st.columns(4)
+    cols = st.columns(11)  # 11 columns for 11 buttons
     race_numbers = list(range(1, 12))  # 1 to 11
-    for i in range(0, len(race_numbers), 4):
-        cols[i % 4].button(str(race_numbers[i]), key=f"race_{race_numbers[i]}", on_click=lambda x=race_numbers[i]: st.session_state.update(selected_race_no=x))
-        if i + 1 < len(race_numbers):
-            cols[(i + 1) % 4].button(str(race_numbers[i + 1]), key=f"race_{race_numbers[i + 1]}", on_click=lambda x=race_numbers[i + 1]: st.session_state.update(selected_race_no=x))
-        if i + 2 < len(race_numbers):
-            cols[(i + 2) % 4].button(str(race_numbers[i + 2]), key=f"race_{race_numbers[i + 2]}", on_click=lambda x=race_numbers[i + 2]: st.session_state.update(selected_race_no=x))
-        if i + 3 < len(race_numbers):
-            cols[(i + 3) % 4].button(str(race_numbers[i + 3]), key=f"race_{race_numbers[i + 3]}", on_click=lambda x=race_numbers[i + 3]: st.session_state.update(selected_race_no=x))
+    for i, race_num in enumerate(race_numbers):
+        cols[i].button(str(race_num), key=f"race_{race_num}", on_click=lambda x=race_num: st.session_state.update(selected_race_no=x))
 
 # 根據 checkbox 設置 methodlist 和 print_list
 methodlist = METHOD_LIST_WITHOUT_QPL if no_qpl else METHOD_LIST_WITH_QPL
