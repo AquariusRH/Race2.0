@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from dateutil import relativedelta as datere
 from data_fetch import get_investment_data, get_odds_data, get_race_info_sync
-from data_process import save_odds_data, save_investment_data, get_overall_investment,weird_data
+from data_process import save_odds_data, save_investment_data, get_overall_investment, weird_data
 from visualization import print_bar_chart
 from config import (
     VENUE_OPTIONS, RACE_NUMBERS, METHOD_LIST_WITH_QPL, METHOD_LIST_WITHOUT_QPL,
