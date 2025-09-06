@@ -54,3 +54,21 @@ def investment_combined(time_now, method, df):
         sums[num1] = sums.get(num1, 0) + col_sum
         sums[num2] = sums.get(num2, 0) + col_sum
     return pd.DataFrame([sums], index=[time_now]) / 2
+
+def weird_data(investments):
+  for method in METHOD_LIST_WITH_QPL:
+    latest_investment = investment_dict[method].tail(1).values
+    last_time_odds = odds_dict[method].tail(2).head(1)
+    expected_investment = investments[method][0]*0.825 / 1000 / last_time_odds
+    diff = round(latest_investment - expected_investment,0)
+    if method in ['WIN','PLA']:
+        diff_dict[method] = diff_dict[method]._append(diff)
+    elif method in ['QIN','QPL']:
+        diff_dict[method] = diff_dict[method]._append(investment_combined(time_now,method,diff))
+    benchmark = benchmark_dict.get(method)
+    diff.index = diff.index.strftime('%H:%M:%S')
+    for index in investment_dict[method].tail(1).columns:
+      error = diff[index].values[0]
+      error_df = []
+      weird_dict[method] = weird_dict[method]._append(error_df)
+
