@@ -16,7 +16,11 @@ from config import (
     VENUE_OPTIONS, RACE_NUMBERS, METHOD_LIST_WITH_QPL, METHOD_LIST_WITHOUT_QPL,
     METHOD_CH_WITH_QPL, METHOD_CH_WITHOUT_QPL, PRINT_LIST_WITH_QPL, PRINT_LIST_WITHOUT_QPL, BENCHMARK_DICT
 )
+def get_investment_data_sync(Date, place, race_no, methodlist):
+    return get_investment_data(Date, place, race_no, methodlist)
 
+def get_odds_data_sync(Date, place, race_no, methodlist):
+    return get_odds_data(Date, place, race_no, methodlist)
 # 設置頁面配置
 st.set_page_config(page_title="Jockey Race", layout="wide")
 st.title("Jockey Race 賽馬程式")
