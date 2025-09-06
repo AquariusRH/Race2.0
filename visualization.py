@@ -10,12 +10,10 @@ def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_n
     time_25_minutes_before = pd.to_datetime(post_time - timedelta(minutes=25))
     time_5_minutes_before = pd.to_datetime(post_time - timedelta(minutes=5))
 
-    if method == "overall":
-        df = overall_investment_dict[method]
-    elif method in METHOD_LIST_WITH_QPL:
+    if method == "overall" or method in METHOD_LIST_WITH_QPL:
         df = overall_investment_dict[method]
     else:
-        continue
+        return
 
     df.index = pd.to_datetime(df.index)
     df_25 = df[df.index < time_25_minutes_before].tail(1)
