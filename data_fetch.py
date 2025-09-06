@@ -195,9 +195,9 @@ logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s 
 
 def get_investment_data(Date, place, race_no, methodlist):
     url = 'https://info.cld.hkjc.com/graphql/base/'
-      headers = {'Content-Type': 'application/json'}
+    headers = {'Content-Type': 'application/json'}
     
-      payload_investment = {
+    payload_investment = {
           "operationName": "racing",
           "variables": {
               "date": str(Date),
