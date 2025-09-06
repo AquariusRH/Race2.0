@@ -29,6 +29,8 @@ if "investment_dict" not in st.session_state:
 if "overall_investment_dict" not in st.session_state:
     st.session_state.overall_investment_dict = {method: pd.DataFrame() for method in METHOD_LIST_WITH_QPL}
     st.session_state.overall_investment_dict["overall"] = pd.DataFrame()
+if "diff_dict" not in st.session_state:
+    st.session_state.diff_dict = {method: pd.DataFrame() for method in METHOD_LIST_WITH_QPL}
 if "race_dataframes" not in st.session_state:
     st.session_state.race_dataframes = {}
 if "numbered_dict" not in st.session_state:
