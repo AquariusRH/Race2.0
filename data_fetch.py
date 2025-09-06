@@ -195,161 +195,175 @@ logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s 
 
 def get_investment_data(Date, place, race_no, methodlist):
     url = 'https://info.cld.hkjc.com/graphql/base/'
-    headers = {'Content-Type': 'application/json'}
-    payload_investment = {
-        "operationName": "racing",
-        "variables": {
-            "date": str(Date),
-            "venueCode": place,
-            "raceNo": int(race_no),
-            "oddsTypes": methodlist
-        },
-        "query": """
-        query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
-          raceMeetings(date: $date, venueCode: $venueCode) {
-            totalInvestment
-            poolInvs: pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
-              id
-              leg {
-                number
-                races
+      headers = {'Content-Type': 'application/json'}
+    
+      payload_investment = {
+          "operationName": "racing",
+          "variables": {
+              "date": str(Date),
+              "venueCode": place,
+              "raceNo": int(race_no),
+              "oddsTypes": methodlist
+          },
+          "query": """
+          query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
+            raceMeetings(date: $date, venueCode: $venueCode) {
+              totalInvestment
+              poolInvs: pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
+                id
+                leg {
+                  number
+                  races
+                }
+                status
+                sellStatus
+                oddsType
+                investment
+                mergedPoolId
+                lastUpdateTime
               }
-              status
-              sellStatus
-              oddsType
-              investment
-              mergedPoolId
-              lastUpdateTime
             }
           }
-        }
-        """
-    }
-    response = requests.post(url, headers=headers, json=payload_investment)
-    if response.status_code == 200:
-        investment_data = response.json()
-        investments = {
-            "WIN": [],
-            "PLA": [],
-            "QIN": [],
-            "QPL": [],
-            "FCT": [],
-            "TRI": [],
-            "FF": []
-        }
-        race_meetings = investment_data.get('data', {}).get('raceMeetings', [])
-        if race_meetings:
-            for meeting in race_meetings:
-                pool_invs = meeting.get('poolInvs', [])
-                for pool in pool_invs:
-                    if place not in ['ST', 'HV']:
+          """
+      }
+    
+      response = requests.post(url, headers=headers, json=payload_investment)
+    
+      if response.status_code == 200:
+          investment_data = response.json()
+    
+          # Extracting the investment into different types of oddsType
+          investments = {
+              "WIN": [],
+              "PLA": [],
+              "QIN": [],
+              "QPL": [],
+              "FCT": [],
+              "TRI": [],
+              "FF": []
+          }
+    
+          race_meetings = investment_data.get('data', {}).get('raceMeetings', [])
+          if race_meetings:
+              for meeting in race_meetings:
+                  pool_invs = meeting.get('poolInvs', [])
+                  for pool in pool_invs:
+                      if place not in ['ST','HV']:
                         id = pool.get('id')
-                        if id and id[8:10] != place:
-                            continue
-                    investment = float(pool.get('investment', 0))
-                    odds_type = pool.get('oddsType')
-                    if odds_type in investments:
-                        investments[odds_type].append(investment)
-            logging.info(f"Investment data fetched for race {race_no}: {investments.keys()}")
-        else:
-            logging.warning(f"No race meetings found in investment data for race {race_no}")
-        return investments
+                        if id[8:10] != place:
+                          continue                
+                      investment = float(pool.get('investment'))
+                      investments[pool.get('oddsType')].append(investment)
+    
+              #print("Investments:", investments)
+          else:
+              print("No race meetings found in the response.")
+    
+          return investments
     else:
         logging.error(f"Error fetching investment data for race {race_no}: {response.status_code}")
         return {method: [] for method in ["WIN", "PLA", "QIN", "QPL", "FCT", "TRI", "FF"]}
 
 def get_odds_data(Date, place, race_no, methodlist):
-    url = 'https://info.cld.hkjc.com/graphql/base/'
-    headers = {'Content-Type': 'application/json'}
-    payload_odds = {
-        "operationName": "racing",
-        "variables": {
-            "date": str(Date),
-            "venueCode": place,
-            "raceNo": int(race_no),
-            "oddsTypes": methodlist
-        },
-        "query": """
-        query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
-          raceMeetings(date: $date, venueCode: $venueCode) {
-            pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
-              id
-              status
-              sellStatus
-              oddsType
-              lastUpdateTime
-              guarantee
-              minTicketCost
-              name_en
-              name_ch
-              leg {
-                number
-                races
-              }
-              cWinSelections {
-                composite
-                name_ch
+      url = 'https://info.cld.hkjc.com/graphql/base/'
+      headers = {'Content-Type': 'application/json'}
+      payload_odds = {
+          "operationName": "racing",
+          "variables": {
+              "date": str(Date),
+              "venueCode": place,
+              "raceNo": int(race_no),
+              "oddsTypes": methodlist
+          },
+          "query": """
+          query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
+            raceMeetings(date: $date, venueCode: $venueCode) {
+              pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
+                id
+                status
+                sellStatus
+                oddsType
+                lastUpdateTime
+                guarantee
+                minTicketCost
                 name_en
-                starters
-              }
-              oddsNodes {
-                combString
-                oddsValue
-                hotFavourite
-                oddsDropValue
-                bankerOdds {
+                name_ch
+                leg {
+                  number
+                  races
+                }
+                cWinSelections {
+                  composite
+                  name_ch
+                  name_en
+                  starters
+                }
+                oddsNodes {
                   combString
                   oddsValue
+                  hotFavourite
+                  oddsDropValue
+                  bankerOdds {
+                    combString
+                    oddsValue
+                  }
                 }
               }
             }
           }
-        }
-        """
-    }
-    response = requests.post(url, headers=headers, json=payload_odds)
-    if response.status_code == 200:
-        odds_data = response.json()
-        odds_values = {
-            "WIN": [],
-            "PLA": [],
-            "QIN": [],
-            "QPL": [],
-            "FCT": [],
-            "TRI": [],
-            "FF": []
-        }
-        race_meetings = odds_data.get('data', {}).get('raceMeetings', [])
-        for meeting in race_meetings:
-            pm_pools = meeting.get('pmPools', [])
-            for pool in pm_pools:
-                if place not in ['ST', 'HV']:
-                    id = pool.get('id')
-                    if id and id[8:10] != place:
-                        continue
-                odds_nodes = pool.get('oddsNodes', [])
-                odds_type = pool.get('oddsType')
-                if not odds_type or odds_type not in odds_values:
-                    continue
-                odds_values[odds_type] = []
-                for node in odds_nodes:
-                    odds_value = node.get('oddsValue')
-                    if odds_value == 'SCR':
-                        odds_value = np.inf
-                    else:
-                        try:
-                            odds_value = float(odds_value)
-                        except (ValueError, TypeError):
-                            continue
-                    comb_string = node.get('combString')
-                    if odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"] and comb_string:
-                        odds_values[odds_type].append((comb_string, odds_value))
-                    else:
-                        odds_values[odds_type].append(odds_value)
-                for odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
-                    odds_values[odds_type].sort(key=lambda x: x[0], reverse=False)
-        logging.info(f"Odds data fetched for race {race_no}: {odds_values.keys()}")
-        return odds_values
+          """
+      }
+    
+      response = requests.post(url, headers=headers, json=payload_odds)
+      if response.status_code == 200:
+          odds_data = response.json()
+              # Extracting the oddsValue into different types of oddsType and sorting by combString for QIN and QPL
+          # Initialize odds_values with empty lists for each odds type
+          odds_values = {
+              "WIN": [],
+              "PLA": [],
+              "QIN": [],
+              "QPL": [],
+              "FCT": [],
+              "TRI": [],
+              "FF": []
+          }
+          
+          race_meetings = odds_data.get('data', {}).get('raceMeetings', [])
+          for meeting in race_meetings:
+              pm_pools = meeting.get('pmPools', [])
+              for pool in pm_pools:
+                  if place not in ['ST', 'HV']:
+                      id = pool.get('id')
+                      if id and id[8:10] != place:  # Check if id exists before slicing
+                          continue
+                  odds_nodes = pool.get('oddsNodes', [])
+                  odds_type = pool.get('oddsType')
+                  odds_values[odds_type] = []
+                  # Skip if odds_type is invalid or not in odds_values
+                  if not odds_type or odds_type not in odds_values:
+                      continue
+                  for node in odds_nodes:
+                      oddsValue = node.get('oddsValue')
+                      # Skip iteration if oddsValue is None, empty, or '---'
+                      if oddsValue == 'SCR':
+                          oddsValue = np.inf
+                      else:
+                          try:
+                              oddsValue = float(oddsValue)
+                          except (ValueError, TypeError):
+                              continue  # Skip if oddsValue can't be converted to float
+                      # Store data based on odds_type
+                      if odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
+                          comb_string = node.get('combString')
+                          if comb_string:  # Ensure combString exists
+                              odds_values[odds_type].append((comb_string, oddsValue))
+                      else:
+                          odds_values[odds_type].append(oddsValue)
+          # Sorting the odds values for specific types by combString in ascending order
+          for odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
+              odds_values[odds_type].sort(key=lambda x: x[0], reverse=False)
+          return odds_values
     else:
         logging.error(f"Error fetching odds data for race {race_no}: {response.status_code}")
         return {method: [] for method in ["WIN", "PLA", "QIN", "QPL", "FCT", "TRI", "FF"]}
