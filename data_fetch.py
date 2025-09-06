@@ -183,120 +183,175 @@ def get_race_info_sync(_date, _place):
         st.error(f"無法獲取賽事資訊: {e}")
         return {}, {}
 
-async def fetch_data(url, payload, headers):
-    async with aiohttp.ClientSession() as session:
-        for attempt in range(3):
-            try:
-                async with session.post(url, json=payload, headers=headers) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        logging.info(f"API request successful: {url}, payload: {payload}")
-                        return data
+# data_fetch.py
+import requests
+import numpy as np
+import pandas as pd
+import streamlit as st
+import logging
+from datetime import datetime
+
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def get_investment_data(Date, place, race_no, methodlist):
+    url = 'https://info.cld.hkjc.com/graphql/base/'
+    headers = {'Content-Type': 'application/json'}
+    payload_investment = {
+        "operationName": "racing",
+        "variables": {
+            "date": str(Date),
+            "venueCode": place,
+            "raceNo": int(race_no),
+            "oddsTypes": methodlist
+        },
+        "query": """
+        query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
+          raceMeetings(date: $date, venueCode: $venueCode) {
+            totalInvestment
+            poolInvs: pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
+              id
+              leg {
+                number
+                races
+              }
+              status
+              sellStatus
+              oddsType
+              investment
+              mergedPoolId
+              lastUpdateTime
+            }
+          }
+        }
+        """
+    }
+    response = requests.post(url, headers=headers, json=payload_investment)
+    if response.status_code == 200:
+        investment_data = response.json()
+        investments = {
+            "WIN": [],
+            "PLA": [],
+            "QIN": [],
+            "QPL": [],
+            "FCT": [],
+            "TRI": [],
+            "FF": []
+        }
+        race_meetings = investment_data.get('data', {}).get('raceMeetings', [])
+        if race_meetings:
+            for meeting in race_meetings:
+                pool_invs = meeting.get('poolInvs', [])
+                for pool in pool_invs:
+                    if place not in ['ST', 'HV']:
+                        id = pool.get('id')
+                        if id and id[8:10] != place:
+                            continue
+                    investment = float(pool.get('investment', 0))
+                    odds_type = pool.get('oddsType')
+                    if odds_type in investments:
+                        investments[odds_type].append(investment)
+            logging.info(f"Investment data fetched for race {race_no}: {investments.keys()}")
+        else:
+            logging.warning(f"No race meetings found in investment data for race {race_no}")
+        return investments
+    else:
+        logging.error(f"Error fetching investment data for race {race_no}: {response.status_code}")
+        return {method: [] for method in ["WIN", "PLA", "QIN", "QPL", "FCT", "TRI", "FF"]}
+
+def get_odds_data(Date, place, race_no, methodlist):
+    url = 'https://info.cld.hkjc.com/graphql/base/'
+    headers = {'Content-Type': 'application/json'}
+    payload_odds = {
+        "operationName": "racing",
+        "variables": {
+            "date": str(Date),
+            "venueCode": place,
+            "raceNo": int(race_no),
+            "oddsTypes": methodlist
+        },
+        "query": """
+        query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
+          raceMeetings(date: $date, venueCode: $venueCode) {
+            pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
+              id
+              status
+              sellStatus
+              oddsType
+              lastUpdateTime
+              guarantee
+              minTicketCost
+              name_en
+              name_ch
+              leg {
+                number
+                races
+              }
+              cWinSelections {
+                composite
+                name_ch
+                name_en
+                starters
+              }
+              oddsNodes {
+                combString
+                oddsValue
+                hotFavourite
+                oddsDropValue
+                bankerOdds {
+                  combString
+                  oddsValue
+                }
+              }
+            }
+          }
+        }
+        """
+    }
+    response = requests.post(url, headers=headers, json=payload_odds)
+    if response.status_code == 200:
+        odds_data = response.json()
+        odds_values = {
+            "WIN": [],
+            "PLA": [],
+            "QIN": [],
+            "QPL": [],
+            "FCT": [],
+            "TRI": [],
+            "FF": []
+        }
+        race_meetings = odds_data.get('data', {}).get('raceMeetings', [])
+        for meeting in race_meetings:
+            pm_pools = meeting.get('pmPools', [])
+            for pool in pm_pools:
+                if place not in ['ST', 'HV']:
+                    id = pool.get('id')
+                    if id and id[8:10] != place:
+                        continue
+                odds_nodes = pool.get('oddsNodes', [])
+                odds_type = pool.get('oddsType')
+                if not odds_type or odds_type not in odds_values:
+                    continue
+                odds_values[odds_type] = []
+                for node in odds_nodes:
+                    odds_value = node.get('oddsValue')
+                    if odds_value == 'SCR':
+                        odds_value = np.inf
                     else:
-                        logging.warning(f"API request failed, status code: {response.status}")
-                        st.warning(f"API 請求失敗，狀態碼: {response.status}")
-            except aiohttp.ClientError as e:
-                logging.error(f"API request error: {e}")
-                st.error(f"請求錯誤: {e}")
-                if attempt < 2:
-                    await asyncio.sleep(2)
-    logging.error(f"API request failed after 3 attempts: {url}")
-    return None
+                        try:
+                            odds_value = float(odds_value)
+                        except (ValueError, TypeError):
+                            continue
+                    comb_string = node.get('combString')
+                    if odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"] and comb_string:
+                        odds_values[odds_type].append((comb_string, odds_value))
+                    else:
+                        odds_values[odds_type].append(odds_value)
+                for odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
+                    odds_values[odds_type].sort(key=lambda x: x[0], reverse=False)
+        logging.info(f"Odds data fetched for race {race_no}: {odds_values.keys()}")
+        return odds_values
+    else:
+        logging.error(f"Error fetching odds data for race {race_no}: {response.status_code}")
+        return {method: [] for method in ["WIN", "PLA", "QIN", "QPL", "FCT", "TRI", "FF"]}
 
-@st.cache_data(ttl=60)
-def get_investment_data_sync(_date, _place, _race_no, _methodlist):
-    return asyncio.run(get_investment_data(_date, _place, _race_no, _methodlist))
-
-async def get_investment_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
-    payload = {
-        "operationName": "racing",
-        "variables": {"date": str(date), "venueCode": place, "raceNo": int(race_no), "oddsTypes": methodlist},
-        "query": """
-        query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
-            raceMeetings(date: $date, venueCode: $venueCode) {
-                totalInvestment
-                poolInvs: pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
-                    id
-                    leg { number races }
-                    status
-                    sellStatus
-                    oddsType
-                    investment
-                    mergedPoolId
-                    lastUpdateTime
-                }
-            }
-        }
-        """
-    }
-    data = await fetch_data(API_URL, payload, HEADERS)
-    if not data or not data.get("data", {}).get("raceMeetings"):
-        logging.error(f"No valid investment data for date: {date}, place: {place}, race_no: {race_no}")
-        return None
-    investments = {method: [] for method in methodlist}
-    race_meetings = data.get("data", {}).get("raceMeetings", [])
-    for meeting in race_meetings:
-        pool_invs = meeting.get("poolInvs", [])
-        for pool in pool_invs:
-            if place not in ["ST", "HV"]:
-                pool_id = pool.get("id")
-                if pool_id and pool_id[8:10] != place:
-                    continue
-            investment = float(pool.get("investment", 0))
-            investments[pool.get("oddsType")].append(investment)
-    return investments
-
-@st.cache_data(ttl=60)
-def get_odds_data_sync(_date, _place, _race_no, _methodlist):
-    return asyncio.run(get_odds_data(_date, _place, _race_no, _methodlist))
-
-async def get_odds_data(date, place, race_no, methodlist=METHOD_LIST_WITH_QPL):
-    payload = {
-        "operationName": "racing",
-        "variables": {"date": str(date), "venueCode": place, "raceNo": int(race_no), "oddsTypes": methodlist},
-        "query": """
-        query racing($date: String, $venueCode: String, $oddsTypes: [OddsType], $raceNo: Int) {
-            raceMeetings(date: $date, venueCode: $venueCode) {
-                pmPools(oddsTypes: $oddsTypes, raceNo: $raceNo) {
-                    id
-                    status
-                    sellStatus
-                    oddsType
-                    lastUpdateTime
-                    guarantee
-                    minTicketCost
-                    name_en
-                    name_ch
-                    leg { number races }
-                    cWinSelections { composite name_ch name_en starters }
-                    oddsNodes { combString oddsValue hotFavourite oddsDropValue bankerOdds { combString oddsValue } }
-                }
-            }
-        }
-        """
-    }
-    data = await fetch_data(API_URL, payload, HEADERS)
-    if not data or not data.get("data", {}).get("raceMeetings"):
-        logging.error(f"No valid odds data for date: {date}, place: {place}, race_no: {race_no}")
-        return None
-    odds_values = {method: [] for method in methodlist}
-    race_meetings = data.get("data", {}).get("raceMeetings", [])
-    for meeting in race_meetings:
-        pm_pools = meeting.get("pmPools", [])
-        for pool in pm_pools:
-            if place not in ["ST", "HV"]:
-                pool_id = pool.get("id")
-                if pool_id and pool_id[8:10] != place:
-                    continue
-            odds_nodes = pool.get("oddsNodes", [])
-            odds_type = pool.get("oddsType")
-            for node in odds_nodes:
-                odds_value = node.get("oddsValue")
-                odds_value = np.inf if odds_value == "SCR" else float(odds_value)
-                if odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
-                    odds_values[odds_type].append((node.get("combString"), odds_value))
-                else:
-                    odds_values[odds_type].append(odds_value)
-        for odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
-            odds_values[odds_type].sort(key=lambda x: x[0] if x else None)
-    return odds_values
+# Existing get_race_info_sync remains unchanged
