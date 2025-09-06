@@ -227,13 +227,13 @@ def get_investment_data(Date, place, race_no, methodlist):
           """
       }
     
-      response = requests.post(url, headers=headers, json=payload_investment)
+    response = requests.post(url, headers=headers, json=payload_investment)
     
-      if response.status_code == 200:
-          investment_data = response.json()
+    if response.status_code == 200:
+        investment_data = response.json()
     
           # Extracting the investment into different types of oddsType
-          investments = {
+        investments = {
               "WIN": [],
               "PLA": [],
               "QIN": [],
@@ -243,8 +243,8 @@ def get_investment_data(Date, place, race_no, methodlist):
               "FF": []
           }
     
-          race_meetings = investment_data.get('data', {}).get('raceMeetings', [])
-          if race_meetings:
+        race_meetings = investment_data.get('data', {}).get('raceMeetings', [])
+        if race_meetings:
               for meeting in race_meetings:
                   pool_invs = meeting.get('poolInvs', [])
                   for pool in pool_invs:
@@ -256,10 +256,10 @@ def get_investment_data(Date, place, race_no, methodlist):
                       investments[pool.get('oddsType')].append(investment)
     
               #print("Investments:", investments)
-          else:
+        else:
               print("No race meetings found in the response.")
     
-          return investments
+        return investments
     else:
         logging.error(f"Error fetching investment data for race {race_no}: {response.status_code}")
         return {method: [] for method in ["WIN", "PLA", "QIN", "QPL", "FCT", "TRI", "FF"]}
