@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 from dateutil import relativedelta as datere
 from data_fetch import get_investment_data, get_odds_data, get_race_info_sync
-from data_process import save_odds_data, save_investment_data, get_overall_investment, weird_data
+from data_process import save_odds_data, save_investment_data, get_overall_investment, get_weird_data
 from visualization import print_bar_chart
 from config import (
     VENUE_OPTIONS, RACE_NUMBERS, METHOD_LIST_WITH_QPL, METHOD_LIST_WITHOUT_QPL,
@@ -111,7 +111,7 @@ if st.session_state.get("reset", False) and race_no:
                 save_investment_data(time_now, investments, odds, st.session_state.investment_dict)
                 get_overall_investment(time_now, st.session_state.investment_dict, st.session_state.overall_investment_dict, methodlist)
                 st.write(st.session_state.overall_investment_dict)
-                weird_dict(st.session_state.investment_dict)
+                get_weird_dict(st.session_state.investment_dict)
                 for method in print_list:
                     st.write(f"{methodCHlist[methodlist.index(method)]} 圖表")
                     print_bar_chart(
