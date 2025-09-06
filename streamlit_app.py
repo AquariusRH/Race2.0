@@ -111,7 +111,7 @@ if st.session_state.get("reset", False) and race_no:
                 save_investment_data(time_now, investments, odds, st.session_state.investment_dict)
                 get_overall_investment(time_now, st.session_state.investment_dict, st.session_state.overall_investment_dict, methodlist)
                 st.write(st.session_state.overall_investment_dict)
-                get_weird_data(st.session_state.investment_dict)
+                get_weird_data(st.session_state.investment_dict,methodlist)
                 for method in print_list:
                     st.write(f"{methodCHlist[methodlist.index(method)]} 圖表")
                     print_bar_chart(
