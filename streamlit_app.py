@@ -116,8 +116,8 @@ if st.session_state.get("reset", False) and race_no:
             investments = get_investment_data_sync(Date, place, race_no, methodlist)
             if odds and investments:
                 save_odds_data(time_now, odds, st.session_state.odds_dict)
-                st.write(st.session_state.odds_dict)
                 save_investment_data(time_now, investments, odds, st.session_state.investment_dict)
+                st.write(st.session_state.investment_dict)
                 get_overall_investment(time_now, st.session_state.investment_dict, st.session_state.overall_investment_dict, methodlist)
                 for method in print_list:
                     st.write(f"{methodCHlist[methodlist.index(method)]} 圖表")
