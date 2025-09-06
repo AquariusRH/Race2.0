@@ -20,10 +20,10 @@ def print_bar_chart(
 ):
     # Get the cutoff/post time for the race
     post_time = post_time_dict[race_no]
-  time_25_minutes_before = np.datetime64(post_time - timedelta(minutes=25) + timedelta(hours=8))
-  time_5_minutes_before = np.datetime64(post_time - timedelta(minutes=5) + timedelta(hours=8))
+    time_25_minutes_before = np.datetime64(post_time - timedelta(minutes=25) + timedelta(hours=8))
+    time_5_minutes_before = np.datetime64(post_time - timedelta(minutes=5) + timedelta(hours=8))
   
-  for method in print_list:
+    for method in print_list:
       odds_list = pd.DataFrame()
       df = pd.DataFrame()
       if method == 'overall':
