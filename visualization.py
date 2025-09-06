@@ -16,15 +16,15 @@ from config import (
 
 def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_no, numbered_dict, post_time_dict):
     # Check if post_time is available
-    post_time = post_time_dict.get(race_no)  # Use .get() to avoid KeyError
+    post_time = post_time_dict.get(race_no)
     if post_time is None:
         st.warning(f"場次 {race_no} 無截止時間數據")
         logging.warning(f"Post time is None for race {race_no}")
         return
 
-    # Adjust post_time to HKT (assuming it's in UTC or another timezone)
+    # Adjust post_time to HKT
     try:
-        post_time_ts = pd.Timestamp(post_time) + timedelta(hours=8)  # Adjust to HKT
+        post_time_ts = pd.Timestamp(post_time) + timedelta(hours=8)
     except (ValueError, TypeError) as e:
         st.error(f"無法解析場次 {race_no} 的截止時間: {e}")
         logging.error(f"Failed to parse post_time for race {race_no}: {e}")
@@ -39,21 +39,22 @@ def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_n
         return
 
     # Access data
-    df = overall_investment_dict.get(method)
+    transformed_method = f"data_{method}"
+    df = overall_investment_dict.get(transformed_method)
     if df is None or df.empty:
-        st.warning(f"無數據可用於 {method} 圖表")
-        logging.warning(f"No data or empty DataFrame for {method} in race {race_no}")
+        st.warning(f"無數據可用於 {transformed_method} 圖表")
+        logging.warning(f"No data or empty DataFrame for {transformed_method} in race {race_no}")
         return
 
-    # Ensure 'time' column exists and is datetime
+    # Ensure 'time' column exists
     if 'time' not in df.columns:
-        st.error(f"DataFrame for {method} missing 'time' column")
-        logging.error(f"Missing 'time' column in {method} DataFrame for race {race_no}")
+        st.error(f"DataFrame for {transformed_method} missing 'time' column")
+        logging.error(f"Missing 'time' column in {transformed_method} DataFrame for race {race_no}")
         return
     df['time'] = pd.to_datetime(df['time'], errors='coerce')
     if df['time'].isna().all():
-        st.error(f"Invalid datetime values in 'time' column for {method}")
-        logging.error(f"Invalid datetime values in 'time' column for {method} in race {race_no}")
+        st.error(f"Invalid datetime values in 'time' column for {transformed_method}")
+        logging.error(f"Invalid datetime values in 'time' column for {transformed_method} in race {race_no}")
         return
 
     # Filter data
