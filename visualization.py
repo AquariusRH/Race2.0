@@ -40,7 +40,7 @@ def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_n
 
     # Access data
     transformed_method = f"data_{method}"
-    df = overall_investment_dict.get(transformed_method)
+    df = overall_investment_dict.get(method)
     if df is None or df.empty:
         st.warning(f"無數據可用於 {transformed_method} 圖表")
         logging.warning(f"No data or empty DataFrame for {transformed_method} in race {race_no}")
