@@ -55,7 +55,7 @@ def investment_combined(time_now, method, df):
         sums[num2] = sums.get(num2, 0) + col_sum
     return pd.DataFrame([sums], index=[time_now]) / 2
 
-def get_weird_data(investments_dict,methodlist):
+def get_weird_data(investment_dict,methodlist):
   for method in methodlist:
     latest_investment = investment_dict[method].tail(1).values
     last_time_odds = odds_dict[method].tail(2).head(1)
