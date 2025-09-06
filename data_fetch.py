@@ -364,7 +364,7 @@ def get_odds_data(Date, place, race_no, methodlist):
           for odds_type in ["QIN", "QPL", "FCT", "TRI", "FF"]:
               odds_values[odds_type].sort(key=lambda x: x[0], reverse=False)
           return odds_values
-    else:
+      else:
         logging.error(f"Error fetching odds data for race {race_no}: {response.status_code}")
         return {method: [] for method in ["WIN", "PLA", "QIN", "QPL", "FCT", "TRI", "FF"]}
 
