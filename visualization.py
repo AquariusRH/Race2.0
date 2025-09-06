@@ -10,8 +10,8 @@ from config import (
 )
 def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_no, numbered_dict, post_time_dict):
     post_time = post_time_dict[race_no]
-    time_25_minutes_before = pd.to_datetime(post_time - timedelta(minutes=25))
-    time_5_minutes_before = pd.to_datetime(post_time - timedelta(minutes=5))
+    time_25_minutes_before = np.datetime64(post_time - timedelta(minutes=25) + timedelta(hours=8))
+    time_5_minutes_before = np.datetime64(post_time - timedelta(minutes=5) + timedelta(hours=8))
 
     if method == "overall" or method in METHOD_LIST_WITH_QPL:
         df = overall_investment_dict[method]
