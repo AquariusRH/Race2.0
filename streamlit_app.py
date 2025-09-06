@@ -114,6 +114,7 @@ if st.session_state.get("reset", False) and race_no:
         try:
             odds = get_odds_data_sync(Date, place, race_no, methodlist)
             investments = get_investment_data_sync(Date, place, race_no, methodlist)
+            st.write(odds)
             if odds and investments:
                 save_odds_data(time_now, odds, st.session_state.odds_dict)
                 save_investment_data(time_now, investments, odds, st.session_state.investment_dict)
