@@ -9,7 +9,7 @@ except ImportError:
 import pandas as pd
 from datetime import datetime, timedelta
 from dateutil import relativedelta as datere
-from data_fetch import get_investment_data_sync, get_odds_data_sync, get_race_info_sync
+from data_fetch import get_investment_data, get_odds_data, get_race_info_sync
 from data_process import save_odds_data, save_investment_data, get_overall_investment
 from visualization import print_bar_chart
 from config import (
