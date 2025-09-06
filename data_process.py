@@ -55,8 +55,8 @@ def investment_combined(time_now, method, df):
         sums[num2] = sums.get(num2, 0) + col_sum
     return pd.DataFrame([sums], index=[time_now]) / 2
 
-def get_weird_data(investments):
-  for method in METHOD_LIST_WITH_QPL:
+def get_weird_data(investments,methodlist):
+  for method in methodlist:
     latest_investment = investment_dict[method].tail(1).values
     last_time_odds = odds_dict[method].tail(2).head(1)
     expected_investment = investments[method][0]*0.825 / 1000 / last_time_odds
