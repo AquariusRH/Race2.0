@@ -29,7 +29,7 @@ def print_bar_chart(
       if method == 'overall':
           df = overall_investment_dict[method]
           change_data = diff_dict[method].iloc[-1]
-      elif method in methodlist:
+      elif method in METHOD_LIST_WITH_QPL:
           df = overall_investment_dict[method]
           change_data = diff_dict[method].tail(10).sum(axis = 0)
           odds_list = odds_dict[method].tail(1)
