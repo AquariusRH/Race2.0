@@ -355,9 +355,4 @@ def get_odds_data(Date, place, race_no, methodlist):
         return {method: [] for method in ["WIN", "PLA", "QIN", "QPL", "FCT", "TRI", "FF"]}
 
 # Existing get_race_info_sync remains unchanged
-# app.py (partial update to function calls)
-def get_investment_data_sync(Date, place, race_no, methodlist):
-    return get_investment_data(Date, place, race_no, methodlist)
 
-def get_odds_data_sync(Date, place, race_no, methodlist):
-    return get_odds_data(Date, place, race_no, methodlist)
