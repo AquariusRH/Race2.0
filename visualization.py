@@ -4,7 +4,10 @@ import altair as alt
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-
+from config import (
+    VENUE_OPTIONS, RACE_NUMBERS, METHOD_LIST_WITH_QPL, METHOD_LIST_WITHOUT_QPL,
+    METHOD_CH_WITH_QPL, METHOD_CH_WITHOUT_QPL, PRINT_LIST_WITH_QPL, PRINT_LIST_WITHOUT_QPL, BENCHMARK_DICT
+)
 def print_bar_chart(time_now, overall_investment_dict, odds_dict, method, race_no, numbered_dict, post_time_dict):
     post_time = post_time_dict[race_no]
     time_25_minutes_before = pd.to_datetime(post_time - timedelta(minutes=25))
