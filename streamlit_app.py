@@ -114,11 +114,11 @@ if st.session_state.get("reset", False) and race_no:
         try:
             odds = get_odds_data_sync(Date, place, race_no, methodlist)
             investments = get_investment_data_sync(Date, place, race_no, methodlist)
-            st.write(investments)
             if odds and investments:
                 save_odds_data(time_now, odds, st.session_state.odds_dict)
                 save_investment_data(time_now, investments, odds, st.session_state.investment_dict)
                 get_overall_investment(time_now, st.session_state.investment_dict, st.session_state.overall_investment_dict, methodlist)
+                st.write(overall_investment_dict)
                 for method in print_list:
                     st.write(f"{methodCHlist[methodlist.index(method)]} 圖表")
                     print_bar_chart(
